@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Libro Digital</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", sans-serif;
+      background-color: #f0f4fa;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .topbar {
+      background-color: #b0d4f1;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #00527a;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .topbar .left {
+      font-size: 16px;
+    }
+
+    .viewer {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+    }
+
+    #book-container {
+      width: 100%;
+      max-width: 900px;
+      max-height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+    }
+
+    .bottombar {
+      background-color: #b0d4f1;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #333;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      background-color: #0078be;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #005a90;
+    }
+
+    #page-info {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="left">📖 2. Dios nos habla: la Palabra de Dios</div>
+    <div class="right">👤 Pablo</div>
+  </div>
+
+  <div class="viewer">
+    <div id="book-container"></div>
+  </div>
+
+  <div class="bottombar">
+    <div class="controls">
+      <button onclick="prevPage()">⬅ Anterior</button>
+      <button onclick="nextPage()">Siguiente ➡</button>
+    </div>
+    <div id="page-info">Página 1</div>
+  </div>
+
+  <script>
+    const url = 'https://librodigitalplus-usercontent.github.io/digital/ta.pdf'; // Asegúrate de que el PDF esté en la misma carpeta
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    const container = document.getElementById('book-container');
+    const pageInfo = document.getElementById('page-info');
+
+    const renderPage = (num) => {
+      pdfDoc.getPage(num).then(page => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+          container.innerHTML = '';
+          container.appendChild(canvas);
+          pageInfo.textContent = `Página ${currentPage} de ${pdfDoc.numPages}`;
+        });
+      });
+    };
+
+    const nextPage = () => {
+      if (currentPage >= pdfDoc.numPages) return;
+      currentPage++;
+      renderPage(currentPage);
+    };
+
+    const prevPage = () => {
+      if (currentPage <= 1) return;
+      currentPage--;
+      renderPage(currentPage);
+    };
+
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+      pdfDoc = pdf;
+      renderPage(currentPage);
+    }).catch(error => {
+      container.innerHTML = `<p style="color: red;">Error cargando el PDF: ${error.message}</p>`;
+    });
+  </script>
+</body>
+</html>
