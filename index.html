@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Libro Digital en HTML</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    #book-container {
+      width: 600px;
+      height: 800px;
+      margin: 20px auto;
+      border: 2px solid #444;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 0 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📘 Libro Digital</h1>
+  <div id="book-container"></div>
+
+  <div class="controls">
+    <button onclick="prevPage()">⬅ Página anterior</button>
+    <span id="page-info">Página 1</span>
+    <button onclick="nextPage()">Página siguiente ➡</button>
+  </div>
+
+  <script>
+    const url = 'libro.pdf'; // Cambia el nombre si tu archivo PDF se llama diferente
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    const container = document.getElementById('book-container');
+    const pageInfo = document.getElementById('page-info');
+
+    const renderPage = (num) => {
+      pdfDoc.getPage(num).then(page => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+          container.innerHTML = ''; // Limpia el contenedor
+          container.appendChild(canvas);
+          pageInfo.textContent = `Página ${currentPage} de ${pdfDoc.numPages}`;
+        });
+      });
+    };
+
+    const nextPage = () => {
+      if (currentPage >= pdfDoc.numPages) return;
+      currentPage++;
+      renderPage(currentPage);
+    };
+
+    const prevPage = () => {
+      if (currentPage <= 1) return;
+      currentPage--;
+      renderPage(currentPage);
+    };
+
+    // Cargar el PDF
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+      pdfDoc = pdf;
+      renderPage(currentPage);
+    }).catch(error => {
+      container.innerHTML = `<p style="color: red;">Error cargando el PDF: ${error.message}</p>`;
+    });
+  </script>
+</body>
+</html>
